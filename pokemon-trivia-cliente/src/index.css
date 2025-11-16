@@ -1,0 +1,84 @@
+:root {
+  /* Paleta de Colores Pokémon */
+  --poke-red: #FF0000;
+  --poke-yellow: #FFCB05;
+  --poke-blue: #3B4CCA;
+  --poke-dark-blue: #003A70;
+  --poke-white: #FFFFFF;
+  --poke-black: #222222;
+
+  /* Fuentes */
+  --font-title: 'Fredoka One', cursive;
+  --font-body: 'Nunito', sans-serif;
+
+  font-family: var(--font-body);
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: var(--poke-black);
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* Fondo degradado suave como el cielo */
+  background: linear-gradient(180deg, #BDEBFF 0%, #FFFFFF 100%);
+  background-attachment: fixed;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* Estilo base para botones */
+button {
+  font-family: var(--font-title);
+  border-radius: 12px;
+  border: 3px solid var(--poke-dark-blue);
+  padding: 0.6em 1.2em;
+  font-size: 1.1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  
+  background-color: var(--poke-yellow);
+  color: var(--poke-dark-blue);
+  box-shadow: 0 4px 0 var(--poke-dark-blue);
+}
+
+button:hover {
+  background-color: #ffd94a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--poke-dark-blue);
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--poke-dark-blue);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto var(--poke-blue);
+}
+
+/* Estilo para links que no son botones */
+a {
+  font-weight: 700;
+  color: var(--poke-blue);
+  text-decoration: inherit;
+}
+a:hover {
+  color: var(--poke-red);
+}

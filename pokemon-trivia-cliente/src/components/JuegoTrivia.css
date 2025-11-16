@@ -1,0 +1,107 @@
+.trivia-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    background: var(--poke-white);
+    /* El estilo de las cajas de diálogo de Pokémon */
+    border-radius: 16px;
+    border: 4px solid var(--poke-black);
+    box-shadow: 0 6px 0 var(--poke-black);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+  
+  .trivia-header {
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    color: var(--poke-dark-blue);
+    background: #f0f0f0;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    border: 2px solid #ddd;
+  }
+  
+  .trivia-question-text {
+    font-family: var(--font-title);
+    font-size: 1.8rem;
+    color: var(--poke-black);
+    min-height: 3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .trivia-pokemon-image {
+    max-width: 240px;
+    height: auto;
+    align-self: center;
+    /* Filtro para sombra estilo "silueta" */
+    filter: drop-shadow(5px 5px 0px rgba(0, 0, 0, 0.2));
+  }
+  
+  .trivia-pokemon-name {
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    color: var(--poke-red);
+    background: #f0f0f0;
+    padding: 0.5rem;
+    border-radius: 10px;
+    text-transform: capitalize;
+  }
+  
+  .trivia-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  /* Botones de opción específicos */
+  .trivia-option-button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    text-transform: capitalize;
+  
+    /* Botones azules estilo Pokémon */
+    background-color: var(--poke-blue);
+    color: var(--poke-white);
+    border: 3px solid var(--poke-dark-blue);
+    box-shadow: 0 4px 0 var(--poke-dark-blue);
+  }
+  
+  .trivia-option-button:hover {
+    background-color: #4e61d4;
+    box-shadow: 0 6px 0 var(--poke-dark-blue);
+  }
+  
+  .trivia-option-button:active {
+    box-shadow: 0 2px 0 var(--poke-dark-blue);
+  }
+  
+  .trivia-option-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .trivia-score-display {
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    color: var(--poke-white);
+    background: var(--poke-red);
+    padding: 0.5rem 1.5rem;
+    border-radius: 12px;
+    border: 3px solid var(--poke-dark-blue);
+    align-self: flex-end;
+    margin-top: 1rem;
+  }
+  
+  .trivia-loading,
+  .trivia-error {
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    color: var(--poke-dark-blue);
+    padding: 2rem;
+  }

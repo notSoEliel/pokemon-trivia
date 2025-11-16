@@ -1,0 +1,34 @@
+# Dependencias (para ambos proyectos)
+**/node_modules/
+
+# Archivos de build (Vite)
+**/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Archivos de entorno (MUY IMPORTANTE para el backend)
+.env
+.env.*
+
+# Base de datos SQLite (para el backend)
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de editores
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
