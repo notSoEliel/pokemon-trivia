@@ -47,7 +47,14 @@ export async function getGame(level) {
 }
 
 export async function saveScore(score, level) {
-  const { data } = await api.post('/trivia/score', { score, level });
+  // Obtenemos la fecha local del usuario en formato YYYY-MM-DD
+  const localDateString = new Date().toLocaleDateString('en-CA');
+
+  // Llama a POST /trivia/score (ahora enviando la fecha)
+  const { data } = await api.post(
+    '/trivia/score',
+    { score, level, localDateString } // <-- Enviamos la fecha local
+  );
   return data;
 }
 

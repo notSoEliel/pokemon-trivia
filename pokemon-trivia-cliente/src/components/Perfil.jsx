@@ -1,42 +1,30 @@
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { AuthContext } from '../App'
-import { getProfile, getMyBestScores, getLeaderboard, updateAvatar } from '../services/api'
+import { getProfile, getMyBestScores, getLeaderboard, updateAvatar } from '../services/Api'
+import StreakTracker from './StreakTracker' // ¡NUEVO! Importamos el Tracker
 
 export default function Perfil() {
   const { token } = useContext(AuthContext)
   const navigate = useNavigate()
   
-  // Estados para el perfil y estadísticas
   const [user, setUser] = useState(null)
   const [myStats, setMyStats] = useState([])
-  
-  // Estados para el Leaderboard (pestaña y top 5)
   const [topPlayers, setTopPlayers] = useState([])
-  const [levelTab, setLevelTab] = useState('general') // Pestaña 'general' por defecto
-  
-  // Estados para el Modal (la parte que faltaba)
+  const [levelTab, setLevelTab] = useState('general')
   const [showAllModal, setShowAllModal] = useState(false)
   const [fullLeaderboard, setFullLeaderboard] = useState([])
-
-  // Estados para el Avatar
   const [showAvatarMenu, setShowAvatarMenu] = useState(false)
   const [pokeName, setPokeName] = useState('')
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [avatarError, setAvatarError] = useState(null)
 
   useEffect(() => {
-    if (!token) {
-      navigate('/login')
-      return
-    }
+    if (!token) { navigate('/login'); return; }
     loadData();
   }, [token, navigate]);
 
-  // Efecto para recargar el leaderboard (Top 5) cuando cambia la pestaña
-  useEffect(() => {
-    if(token) loadLeaderboard(levelTab);
-  }, [levelTab]);
+  useEffect(() => { if(token) loadLeaderboard(levelTab); }, [levelTab]);
 
   const loadData = async () => {
     try {
@@ -44,37 +32,31 @@ export default function Perfil() {
       setUser(userData);
       const statsData = await getMyBestScores();
       setMyStats(statsData.stats || []);
-      // Carga el leaderboard de la pestaña inicial ('general')
       loadLeaderboard(levelTab);
-    } catch (e) { console.error("Error cargando perfil", e); }
+    } catch (e) { console.error(e); }
   }
 
   const loadLeaderboard = async (lvl) => {
     try {
-        const data = await getLeaderboard(lvl, 5); // Pedimos solo 5 para la vista principal
+        const data = await getLeaderboard(lvl, 5);
         setTopPlayers(data.top);
-    } catch(e) {}
+    } catch(e) {console.log()}
   }
 
-  // --- ¡AQUÍ ESTÁ LA FUNCIÓN QUE FALTABA! ---
   const openFullLeaderboard = async () => {
       try {
-        const data = await getLeaderboard(levelTab); // Sin limite, pide todos
+        const data = await getLeaderboard(levelTab);
         setFullLeaderboard(data.top);
-        setShowAllModal(true); // Abre el modal
-      } catch (e) {
-        console.error("Error al cargar leaderboard completo", e);
-      }
+        setShowAllModal(true);
+      } catch (e) { console.error(e); }
   }
 
   const handleUpdateAvatar = async (type) => {
-      setAvatarLoading(true);
-      setAvatarError(null);
+      setAvatarLoading(true); setAvatarError(null);
       try {
           const res = await updateAvatar(type, pokeName);
           setUser(prev => ({ ...prev, profile_pic: res.profile_pic }));
-          setShowAvatarMenu(false);
-          setPokeName('');
+          setShowAvatarMenu(false); setPokeName('');
       } catch (err) {
           setAvatarError(err.response?.data?.error || "Error al actualizar");
       } finally {
@@ -84,13 +66,12 @@ export default function Perfil() {
 
   if (!user) return <div className="profile-container">Cargando Perfil...</div>
 
-  // Verificamos si el usuario puede elegir avatar
   const canChoose = user.total_points >= user.unlock_threshold;
 
   return (
     <div className="profile-container">
       
-      {/* --- SECCIÓN 1: TRAINER CARD (PERFIL REAL) --- */}
+      {/* --- SECCIÓN 1: TRAINER CARD --- */}
       <div className="trainer-card">
         <div className="trainer-avatar-container" style={{ position: 'relative' }}>
             <img 
@@ -106,17 +87,18 @@ export default function Perfil() {
                 ✏️
             </button>
         </div>
-
         <div className="trainer-info">
             <h2>Entrenador {user.nombre}</h2>
             <div className="trainer-stats">
                 <div className="stat-badge">⭐ Puntos Totales: {user.total_points}</div>
-                <div className="stat-badge">🔥 Racha: {user.streak} días</div>
             </div>
         </div>
       </div>
 
-      {/* --- SECCIÓN 1B: MENU DE AVATAR (Si se abre) --- */}
+      {/* --- SECCIÓN 1B: TRACKER DE RACHA --- */}
+      <StreakTracker streak={user.streak} lastPlayed={user.last_played} />
+
+      {/* --- SECCIÓN 1C: MENU DE AVATAR --- */}
       {showAvatarMenu && (
           <div className="profile-card" style={{ border: '2px dashed var(--poke-blue)', backgroundColor: '#f0f8ff' }}>
               <h4>Cambiar Foto de Perfil</h4>
@@ -124,7 +106,6 @@ export default function Perfil() {
                   <button onClick={() => handleUpdateAvatar('random')} disabled={avatarLoading}>
                       🎲 ¡Quiero uno aleatorio!
                   </button>
-                  
                   <div style={{ display: 'flex', gap: 5 }}>
                       <input 
                           type="text" 
@@ -148,7 +129,7 @@ export default function Perfil() {
           </div>
       )}
 
-      {/* --- SECCIÓN 2: MIS MEDALLAS (Estadísticas) --- */}
+      {/* --- SECCIÓN 2: MIS MEDALLAS --- */}
       <div className="profile-card">
         <h3>Mis Medallas (Mejores Puntajes)</h3>
         <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '10px' }}>
@@ -157,12 +138,8 @@ export default function Perfil() {
                 return (
                     <div key={lvl} style={{ textAlign: 'center', opacity: stat ? 1 : 0.5 }}>
                         <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Nivel {lvl}</div>
-                        <div style={{ color: 'var(--poke-blue)', fontSize: '1.5rem', fontFamily: 'var(--font-title)' }}>
-                            {stat ? stat.best : '-'}
-                        </div>
-                        <div style={{ fontSize: '0.8rem' }}>
-                            Último: {stat ? stat.last : '-'}
-                        </div>
+                        <div style={{ color: 'var(--poke-blue)', fontSize: '1.5rem', fontFamily: 'var(--font-title)' }}>{stat ? stat.best : '-'}</div>
+                        <div style={{ fontSize: '0.8rem' }}>Último: {stat ? stat.last : '-'}</div>
                         <Link to={`/juego/${lvl}`}><button style={{ padding: '5px 10px', fontSize: '0.8rem', marginTop: '5px' }}>Jugar</button></Link>
                     </div>
                 )
@@ -170,26 +147,15 @@ export default function Perfil() {
         </div>
       </div>
 
-      {/* --- SECCIÓN 3: LEADERBOARD INTERACTIVO (Con pestaña General) --- */}
+      {/* --- SECCIÓN 3: LEADERBOARD --- */}
       <div className="leaderboard-section">
         <h3>Ranking Mundial</h3>
-        
         <div className="tabs">
-            {/* Botón General */}
-            <button 
-                className={`tab-btn ${levelTab === 'general' ? 'active' : ''}`}
-                onClick={() => setLevelTab('general')}
-            >
+            <button className={`tab-btn ${levelTab === 'general' ? 'active' : ''}`} onClick={() => setLevelTab('general')}>
                 🏆 General
             </button>
-            
-            {/* Botones de Nivel */}
             {[1, 2, 3].map(lvl => (
-                <button 
-                    key={lvl} 
-                    className={`tab-btn ${levelTab === lvl ? 'active' : ''}`}
-                    onClick={() => setLevelTab(lvl)}
-                >
+                <button key={lvl} className={`tab-btn ${levelTab === lvl ? 'active' : ''}`} onClick={() => setLevelTab(lvl)}>
                     Nivel {lvl}
                 </button>
             ))}
@@ -202,24 +168,21 @@ export default function Perfil() {
                         <span>#{idx + 1} {p.nombre} {idx === 0 && '👑'}</span>
                     </div>
                     <span>
-                        <strong>{levelTab === 'general' ? p.total_score : p.best}</strong> pts
-                        {/* Mostramos la racha solo si el backend la provee (como en 'general') */}
+                        <strong>{levelTab === 'general' ? p.total_score : p.total_score}</strong> pts
                         {p.streak !== undefined && <span style={{fontSize: '0.8em', marginLeft: 5}}>(🔥{p.streak})</span>}
                     </span>
                 </li>
             ))}
             {topPlayers.length === 0 && <li style={{padding: 20}}>Sin datos.</li>}
         </ul>
-
         <div style={{ marginTop: '20px' }}>
-            {/* Este botón ahora llamará a la función definida */}
             <button onClick={openFullLeaderboard} style={{ backgroundColor: 'var(--poke-blue)', color: 'white' }}>
                 Ver Ranking Completo
             </button>
         </div>
       </div>
 
-      {/* --- ¡LA OTRA PARTE QUE FALTABA! El Modal --- */}
+      {/* --- MODAL (Arreglado) --- */}
       {showAllModal && (
           <div className="modal-overlay" onClick={() => setShowAllModal(false)}>
               <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -228,7 +191,8 @@ export default function Perfil() {
                     {fullLeaderboard.map((p, idx) => (
                         <li key={idx} className="leaderboard-item">
                             <span>#{idx + 1} {p.nombre}</span>
-                            <span><strong>{levelTab === 'general' ? p.total_score : p.best}</strong> pts</span>
+                            {/* ¡BUG ARREGLADO! Ahora usa total_score */}
+                            <span><strong>{p.total_score}</strong> pts</span>
                         </li>
                     ))}
                   </ul>
@@ -236,7 +200,6 @@ export default function Perfil() {
               </div>
           </div>
       )}
-
     </div>
   )
 }

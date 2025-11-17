@@ -282,3 +282,70 @@
   overflow-y: auto;
   border: 4px solid var(--poke-blue);
 }
+
+/* --- Tracker de Racha --- */
+.streak-tracker {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #f4f4f4;
+  border-radius: 12px;
+  padding: 10px 15px;
+  border: 2px solid #ddd;
+  width: 100%;
+  box-sizing: border-box; /* Importante */
+}
+
+.streak-tracker .icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.streak-tracker .text {
+  display: flex;
+  flex-direction: column;
+}
+
+.streak-tracker .text strong {
+  font-size: 1.1rem;
+  color: var(--poke-dark-blue);
+}
+
+.streak-tracker .text small {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Estado: Puede jugar hoy */
+.streak-tracker.can-play {
+  background-color: #fff8e1; /* Amarillo pálido */
+  border-color: var(--poke-yellow);
+}
+.streak-tracker.can-play .text strong {
+  color: #e65100;
+}
+
+.streak-tracker .timer {
+  margin-left: auto;
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  color: var(--poke-red);
+  background: white;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 2px solid var(--poke-red);
+}
+
+/* Estado: Ya jugó hoy */
+.streak-tracker.played-today {
+  background-color: #e8f5e9; /* Verde pálido */
+  border-color: #a5d6a7;
+}
+.streak-tracker.played-today .text strong {
+  color: #2e7d32;
+}
+
+/* Estado: Racha rota o ninguna */
+.streak-tracker.none .text strong {
+    color: var(--poke-red);
+}

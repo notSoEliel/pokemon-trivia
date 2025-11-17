@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { register } from '../services/api'
+import { register } from '../services/Api'
 import './Forms.css' // Importar estilos de formulario
 
 export default function Registro() {

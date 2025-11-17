@@ -114,13 +114,15 @@ app.post('/auth/token', (req, res) => {
   });
 });
 
+// Obtener perfil + Puntos totales + Racha
 app.get('/auth/me', authMiddleware, (req, res) => {
   const sql = `
-    SELECT u.id, u.nombre, u.email, u.streak, u.profile_pic, 
+    SELECT u.id, u.nombre, u.email, u.streak, u.profile_pic, u.last_played, 
     COALESCE(SUM(s.score), 0) as total_points
     FROM users u
     LEFT JOIN scores s ON u.id = s.user_id
     WHERE u.id = ?
+    GROUP BY u.id
   `;
   db.get(sql, [req.user.id], (err, user) => {
     if (err) return res.status(500).json({ error: "Error." });
@@ -248,27 +250,37 @@ app.get('/trivia/game/:level', authMiddleware, async (req, res) => {
 // (Idénticas a la versión anterior, pero las incluyo para que el archivo esté completo)
 
 app.post('/trivia/score', authMiddleware, (req, res) => {
-  const { level, score } = req.body;
+  // Ahora recibimos 'localDateString' (YYYY-MM-DD) desde el frontend
+  const { level, score, localDateString } = req.body;
   const user_id = req.user.id;
-  const today = new Date().toISOString().split('T')[0];
 
+  // 1. Guardar puntaje
   db.run(`INSERT INTO scores (user_id, level, score, date) VALUES (?, ?, ?, ?)`, [user_id, level, score, new Date().toISOString()], function(err) {
     if (err) return res.status(500).json({ error: "Error al guardar puntaje." });
     
+    // 2. Calcular Racha (ahora basado en la fecha local del usuario)
     db.get(`SELECT streak, last_played FROM users WHERE id = ?`, [user_id], (err, user) => {
         let newStreak = user.streak;
-        const lastPlayed = user.last_played ? user.last_played.split('T')[0] : null;
+        const lastPlayed = user.last_played; // (ej: "2025-11-16")
 
-        if (lastPlayed !== today) {
+        // Solo calculamos si no ha jugado hoy
+        if (lastPlayed !== localDateString) {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            // 'en-CA' da el formato YYYY-MM-DD
+            const yesterdayStr = yesterday.toLocaleDateString('en-CA'); 
 
-            if (lastPlayed === yesterdayStr) newStreak += 1;
-            else newStreak = 1;
+            if (lastPlayed === yesterdayStr) {
+                newStreak += 1; // ¡Jugó ayer, aumenta racha!
+            } else {
+                newStreak = 1; // Rompió la racha o es el primer juego
+            }
             
-            db.run(`UPDATE users SET streak = ?, last_played = ? WHERE id = ?`, [newStreak, new Date().toISOString(), user_id]);
+            // Actualizamos la racha y la fecha del último juego
+            db.run(`UPDATE users SET streak = ?, last_played = ? WHERE id = ?`, [newStreak, localDateString, user_id]);
         }
+        
+        // Devolvemos la racha (ya sea la vieja o la nueva)
         res.status(201).json({ message: "Guardado", streak: newStreak });
     });
   });
@@ -305,20 +317,24 @@ app.get('/trivia/leaderboard/general', authMiddleware, (req, res) => {
 // Leaderboard por Nivel
 app.get('/trivia/leaderboard/:level', authMiddleware, (req, res) => {
   const level = parseInt(req.params.level, 10);
-  // Validar que el nivel es un número (para que no colisione con 'general')
+
   if (isNaN(level) || level < 1 || level > 3) {
       return res.status(400).json({ error: "Nivel inválido." });
   }
+
   const limit = req.query.limit ? `LIMIT ${req.query.limit}` : '';
+
+  // CAMBIO: Usamos SUM() en lugar de MAX() y lo llamamos total_score
   const sql = `
-    SELECT u.nombre, u.streak, MAX(s.score) as best
+    SELECT u.nombre, u.streak, SUM(s.score) as total_score
     FROM scores s
     JOIN users u ON s.user_id = u.id
     WHERE s.level = ?
     GROUP BY s.user_id, u.nombre
-    ORDER BY best DESC
+    ORDER BY total_score DESC
     ${limit}
   `;
+
   db.all(sql, [level], (err, rows) => {
       if (err) return res.status(500).json({ error: "Error al obtener leaderboard." });
       res.status(200).json({ level: level, top: rows });
