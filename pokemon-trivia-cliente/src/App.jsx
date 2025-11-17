@@ -1,15 +1,12 @@
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState, createContext, useContext } from 'react'
-import './App.css' // Importamos los estilos de App
-
-// Importamos los componentes que creamos
+import './App.css' 
 import Login from './components/Login'
 import Registro from './components/Registro'
-import JuegoTrivia from './components/JuegoTrivia' // <-- ¡NUEVO!
+import JuegoTrivia from './components/JuegoTrivia' 
 
-// Importamos la API (falsa) para el perfil
-import { getMyBestScores, getLeaderboard } from './services/Api'
-
+// ¡Importamos la función de logout real!
+import { getMyBestScores, getLeaderboard, logout as apiLogout } from './services/api'
 
 // 1. Creamos el Contexto para la autenticación
 const AuthContext = createContext(null)
@@ -19,10 +16,10 @@ function Layout() {
   const navigate = useNavigate()
   const { token, setToken } = useContext(AuthContext)
   
-  const logout = () => {
-    localStorage.removeItem('token')
-    setToken(null)
-    navigate('/')
+  const onLogout = () => {
+    apiLogout(); // <-- ¡USA LA FUNCIÓN REAL!
+    setToken(null);
+    navigate('/');
   }
 
   return (
@@ -38,11 +35,10 @@ function Layout() {
         {token && <Link to="/perfil"><button>Perfil</button></Link>}
         {token && (
           <>
-            {/* ¡Links de juego activados! */}
             <Link to="/juego/1"><button>Nivel 1</button></Link>
             <Link to="/juego/2"><button>Nivel 2</button></Link>
             <Link to="/juego/3"><button>Nivel 3</button></Link>
-            <button onClick={logout} style={{ backgroundColor: 'var(--poke-red)', color: 'var(--poke-white)' }}>Salir</button>
+            <button onClick={onLogout} style={{ backgroundColor: 'var(--poke-red)', color: 'var(--poke-white)' }}>Salir</button>
           </>
         )}
       </nav>
@@ -53,7 +49,6 @@ function Layout() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Registro />} />
           <Route path="/perfil" element={<Perfil />} />
-          {/* ¡Ruta de juego activada! */}
           <Route path="/juego/:level" element={<JuegoTrivia />} />
         </Routes>
       </main>
@@ -99,7 +94,7 @@ function Home() {
   )
 }
 
-// Perfil actualizado para cargar datos falsos
+// Perfil actualizado para cargar datos REALES
 function Perfil() {
   const { token } = useContext(AuthContext)
   const navigate = useNavigate()
@@ -107,6 +102,7 @@ function Perfil() {
   const [level, setLevel] = useState(1)
   const [top, setTop] = useState([])
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Para manejar errores
 
   useEffect(() => {
     if (!token) {
@@ -116,24 +112,38 @@ function Perfil() {
     let mounted = true
     async function load() {
       setLoading(true);
+      setError(null);
       try {
-        // Usamos la API (falsa)
+        // Usamos la API (REAL)
         const [me, board] = await Promise.all([
-          getMyBestScores(token),
-          getLeaderboard(level, token),
+          getMyBestScores(), // Ya no pasamos el token
+          getLeaderboard(level), // Ya no pasamos el token
         ])
         if (!mounted) return
         setBest(me.bestByLevel || [])
         setTop(board.top || [])
-      } catch (_) {
-        // no-op
+      } catch (err) {
+         console.error(err);
+         // Si el token expira o es inválido, el backend dará error 401
+         if (err.response && err.response.status === 401) {
+            setError("Tu sesión expiró. Por favor, inicia sesión de nuevo.");
+            // Forzamos el logout en el frontend
+            apiLogout();
+            // Refrescamos la página para que el AuthContext se actualice
+            // (Una solución más elegante usaría setToken(null), pero esto es robusto)
+            navigate('/login'); 
+         } else {
+            setError("Error al cargar los datos del perfil.");
+         }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
     load()
     return () => { mounted = false }
-  }, [token, navigate, level]) // Se recarga si cambias el 'level' del leaderboard
+  }, [token, navigate, level])
 
   const last = (() => {
     try {
@@ -153,7 +163,15 @@ function Perfil() {
     return `${visible}***@${domain}`
   }
 
-  if (!token) return null; // Ya estamos protegidos por el useEffect, pero por si acaso
+  if (error) {
+    return (
+      <div className="profile-container">
+        <div className="profile-card form-error">
+          {error}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="profile-container">
@@ -193,9 +211,10 @@ function Perfil() {
         </div>
         {loading ? <p>Cargando...</p> : (
           <ol>
+            {/* El backend real devuelve 'nombre' no 'email' */}
             {top.map((r, idx) => (
-              <li key={r.userId}>
-                <strong>#{idx + 1}</strong> · {maskEmail(r.email)} · <strong>{r.best} Pts.</strong>
+              <li key={idx}>
+                <strong>#{idx + 1}</strong> · {r.nombre} · <strong>{r.best} Pts.</strong>
               </li>
             ))}
             {top.length === 0 && <li>¡Sé el primero en jugar!</li>}

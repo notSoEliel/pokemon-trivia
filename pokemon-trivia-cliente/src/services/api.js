@@ -1,91 +1,87 @@
-import axios from 'axios'
+import axios from 'axios';
 
-// Apuntará a nuestro backend CUANDO exista
+// 1. Creamos la instancia de Axios
 const api = axios.create({
   baseURL: 'http://localhost:8000',
-})
+});
 
-// --- FUNCIONES DE AUTENTICACIÓN (PLACEHOLDER) ---
+// 2. ¡El Interceptor! (La magia de Axios)
+// Esto se ejecuta ANTES de CADA petición.
+// Su trabajo es comprobar si tenemos un token en localStorage.
+// Si lo tenemos, lo añade al header 'Authorization'.
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-export async function register(email, password) {
-  console.log('Intentando registrar:', email, password)
-  // Simula un error (p.ej., el email ya existe)
-  throw new Error('El backend no está conectado (Registro).')
+// --- FUNCIONES DE AUTENTICACIÓN (REALES) ---
+
+export async function register(nombre, email, password) {
+  // Llama a POST /auth/register
+  const { data } = await api.post('/auth/register', { nombre, email, password });
+  return data;
 }
 
 export async function login(email, password) {
-  console.log('Intentando login:', email, password)
-  // ¡Simulemos un ÉXITO para probar la UI!
-  await new Promise(resolve => setTimeout(resolve, 500)) // Espera 0.5s
-  const fakeToken = 'token_falso_12345'
-  localStorage.setItem('token', fakeToken)
-  return fakeToken
-}
-
-// --- FUNCIONES DEL JUEGO (PLACEHOLDER) ---
-
-export async function getGame(level, token) {
-  console.log(`Pidiendo juego Nivel ${level} con token ${token}`)
-  // Simula una carga de API
-  await new Promise(resolve => setTimeout(resolve, 750))
-
-  // Devuelve preguntas falsas
-  const fakeQuestions = [
-    {
-      question: "¿Cuál es el nombre de este Pokémon?",
-      image_url: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
-      options: ["Bulbasaur", "Charmander", "Squirtle", "Pikachu"],
-      answer: "Bulbasaur",
-    },
-    {
-      question: "¿Cuál es el nombre de este Pokémon?",
-      image_url: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png",
-      options: ["Ivysaur", "Charmander", "Charmeleon", "Ratata"],
-      answer: "Charmander",
-    },
-     {
-      question: "¿Cuál es un tipo de 'Pikachu'?",
-      options: ["Fuego", "Agua", "Eléctrico", "Planta"],
-      answer: "Eléctrico",
-    }
-  ]
+  // Llama a POST /auth/token
+  const { data } = await api.post('/auth/token', { email, password });
   
-  return { level: level, questions: fakeQuestions }
+  if (data.access_token) {
+    // 1. Guardamos el token en localStorage
+    localStorage.setItem('token', data.access_token);
+    // 2. (Opcional pero recomendado) Actualizamos el header por defecto de axios
+    //    Aunque el interceptor ya lo hace, esto es inmediato.
+    api.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+  }
+  return data.access_token;
 }
 
-export async function saveScore(score, level, token) {
-  console.log(`Guardando puntaje: ${score} para Nivel ${level} con token ${token}`)
-  // Simula un guardado exitoso
-  await new Promise(resolve => setTimeout(resolve, 300))
-  return { id: 1, score: score, level: level }
+export function logout() {
+  // 1. Borramos el token de localStorage
+  localStorage.removeItem('token');
+  // 2. Borramos el header de axios
+  delete api.defaults.headers.common['Authorization'];
 }
 
-// --- FUNCIONES DE PERFIL (PLACEHOLDER) ---
+// --- FUNCIONES DEL JUEGO (REALES) ---
+// (Nota: ya no necesitamos pasar el 'token' como argumento,
+// el interceptor de axios lo añade automáticamente)
 
-export async function getMyBestScores(token) {
-    console.log(`Pidiendo mis mejores puntajes con token ${token}`)
-    await new Promise(resolve => setTimeout(resolve, 400))
-    // Simula puntajes
-    return {
-        bestByLevel: [
-            { level: 1, best: 2 },
-            { level: 2, best: 1 }
-        ]
-    }
+export async function getGame(level) {
+  // Llama a GET /trivia/game/:level (con token automático)
+  const { data } = await api.get(`/trivia/game/${level}`);
+  return data;
 }
 
-export async function getLeaderboard(level, token) {
-    console.log(`Pidiendo leaderboard Nivel ${level} con token ${token}`)
-    await new Promise(resolve => setTimeout(resolve, 600))
-    // Simula leaderboard
-    return {
-        level: level,
-        top: [
-            { userId: 1, email: "ash@ketchum.com", best: 3 },
-            { userId: 2, email: "misty@c.com", best: 2 },
-        ]
-    }
+export async function saveScore(score, level) {
+  // Llama a POST /trivia/score (con token automático)
+  const { data } = await api.post(
+    '/trivia/score',
+    { score, level }
+  );
+  return data;
 }
 
+// --- FUNCIONES DE PERFIL (REALES) ---
 
-export default api
+export async function getMyBestScores() {
+  // Llama a GET /trivia/scores/me (con token automático)
+  const { data } = await api.get('/trivia/scores/me');
+  return data;
+}
+
+export async function getLeaderboard(level) {
+  // Llama a GET /trivia/leaderboard/:level (con token automático)
+  const { data } = await api.get(`/trivia/leaderboard/${level}`);
+  return data;
+}
+
+export default api;
