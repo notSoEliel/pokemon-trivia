@@ -18,10 +18,10 @@ const ALL_TYPES = ["normal", "fire", "water", "electric", "grass", "ice", "fight
 let POKEMON_NAME_CACHE = [];
 
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
 // --- Middlewares ---
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors());
 app.use(express.json());
 
 // --- Inicializar Base de Datos ---
