@@ -1,7 +1,9 @@
 // pokemon-trivia-cliente/src/services/api.js
 import axios from 'axios';
 
-const api = axios.create({ baseURL: 'http://localhost:8000' });
+// Si existe una variable de entorno VITE_API_URL, úsala. Si no, usa localhost.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const api = axios.create({ baseURL: API_URL });
 
 api.interceptors.request.use(
   (config) => {
