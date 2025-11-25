@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { AuthContext } from '../App'
-import { getProfile, getMyBestScores, getLeaderboard, updateAvatar } from '../services/Api'
+import { getProfile, getMyBestScores, getLeaderboard, updateAvatar } from '../services/api'
 import StreakTracker from './StreakTracker' // ¡NUEVO! Importamos el Tracker
 
 export default function Perfil() {

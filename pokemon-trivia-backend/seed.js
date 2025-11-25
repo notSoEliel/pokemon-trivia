@@ -61,6 +61,30 @@ const FAKE_USERS = [
 async function seed() {
     console.log("🌱 Sembrando base de datos...");
 
+    // --- PASO 0: CREAR TABLAS (Por si no existen en Render) ---
+    await run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        streak INTEGER DEFAULT 0,
+        last_played TEXT,
+        profile_pic TEXT
+      )
+    `);
+    
+    await run(`
+      CREATE TABLE IF NOT EXISTS scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        level INTEGER NOT NULL,
+        score INTEGER NOT NULL,
+        date TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+      )
+    `);
+
     // 1. Limpiar tablas existentes (para empezar limpio)
     await run("DELETE FROM scores");
     await run("DELETE FROM users");

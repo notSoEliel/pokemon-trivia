@@ -7,7 +7,7 @@ import Registro from './components/Registro'
 import JuegoTrivia from './components/JuegoTrivia' 
 import Perfil from './components/Perfil'
 
-import { logout as apiLogout } from './services/Api'
+import { logout as apiLogout } from './services/api'
 
 const AuthContext = createContext(null)
 

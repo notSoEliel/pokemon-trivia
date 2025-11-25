@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login } from '../services/Api'
+import { login } from '../services/api'
 import { AuthContext } from '../App' // Importamos el contexto
 import './Forms.css' // Importar estilos de formulario
 

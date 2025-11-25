@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getGame, saveScore } from '../services/Api'
+import { getGame, saveScore } from '../services/api'
 import { AuthContext } from '../App'
 import './JuegoTrivia.css' // Importar estilos del juego
 
